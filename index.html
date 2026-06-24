@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0f1b2d">
-<title>CertTrack — Certificate Renewal Tracker</title>
+<title>CertTrack — Live Dashboard</title>
 <style>
   :root{
     --ink:#0f1b2d; --ink-2:#1d2d44; --paper:#f6f4ee; --card:#ffffff;
@@ -15,51 +15,36 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--paper); color:var(--text); -webkit-font-smoothing:antialiased;
-    line-height:1.45;
-  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--paper);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.45}
   .wrap{max-width:1080px;margin:0 auto;padding:0 16px 120px}
-
-  /* Header */
-  header.top{
-    background:var(--ink); color:#fff; padding:18px 16px calc(18px + env(safe-area-inset-top));
-    padding-top:calc(18px + env(safe-area-inset-top));
-    position:sticky; top:0; z-index:30; box-shadow:0 2px 18px rgba(15,27,45,.25);
-  }
+  header.top{background:var(--ink);color:#fff;padding:18px 16px;padding-top:calc(18px + env(safe-area-inset-top));
+    position:sticky;top:0;z-index:30;box-shadow:0 2px 18px rgba(15,27,45,.25)}
   .top-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
   .brand{display:flex;align-items:center;gap:11px;min-width:0}
   .logo{width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:linear-gradient(150deg,#2f7fb0,#3f8f5e);display:flex;align-items:center;justify-content:center}
   .logo svg{width:20px;height:20px}
   .brand h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px;white-space:nowrap}
   .brand p{margin:0;font-size:11px;color:#9fb2c9;letter-spacing:.3px}
-  .top-actions{display:flex;gap:8px}
+  .top-actions{display:flex;gap:8px;align-items:center}
   .ghost-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);
-    border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer}
+    border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
   .ghost-btn:hover{background:rgba(255,255,255,.18)}
-
-  /* Tabs */
-  nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);
-    overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .spin{display:inline-block;animation:rot 1s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
+  nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
   .tabs-inner{max-width:1080px;margin:0 auto;display:flex;gap:2px;padding:0 8px}
-  .tab{flex:0 0 auto;background:none;border:none;padding:14px 14px 11px;font-size:13.5px;font-weight:600;
-    color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
+  .tab{flex:0 0 auto;background:none;border:none;padding:14px 14px 11px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
   .tab.active{color:var(--ink);border-bottom-color:var(--d90)}
-  .tab .ct{display:inline-block;margin-left:5px;background:var(--line);color:var(--ink-2);
-    font-size:11px;border-radius:20px;padding:1px 7px;font-weight:700}
-
+  .tab .ct{display:inline-block;margin-left:5px;background:var(--line);color:var(--ink-2);font-size:11px;border-radius:20px;padding:1px 7px;font-weight:700}
   section{display:none;padding-top:22px}
   section.active{display:block;animation:fade .25s ease}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-
   h2.title{font-size:21px;margin:0 0 4px;letter-spacing:-.2px}
   .sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
-
-  /* Status band strip */
+  .synced{font-size:11.5px;color:var(--muted);margin:-10px 0 16px;display:flex;align-items:center;gap:6px}
+  .dotlive{width:7px;height:7px;border-radius:50%;background:var(--valid)}
   .bands{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:22px}
-  .band{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 12px;
-    cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;overflow:hidden}
+  .band{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 12px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;overflow:hidden}
   .band:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
   .band .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
   .band.sel{box-shadow:0 0 0 2px var(--ink) inset}
@@ -67,620 +52,277 @@
   .band .l{font-size:11.5px;color:var(--muted);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
   .b-valid .bar{background:var(--valid)} .b-90 .bar{background:var(--d90)} .b-60 .bar{background:var(--d60)}
   .b-30 .bar{background:var(--d30)} .b-20 .bar{background:var(--d20)} .b-exp .bar{background:var(--exp)}
-
-  /* Table / cards */
   .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-  .panel-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;
-    justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .panel-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .panel-head h3{margin:0;font-size:14.5px}
-  .search{flex:1;min-width:140px;max-width:280px;border:1px solid var(--line);border-radius:9px;
-    padding:8px 11px;font-size:13.5px;background:var(--paper)}
+  .search{flex:1;min-width:140px;max-width:280px;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:13.5px;background:var(--paper)}
+  .search:focus{outline:none;border-color:var(--d90);box-shadow:0 0 0 3px rgba(47,127,176,.12)}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
-  thead th{text-align:left;padding:11px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-    color:var(--muted);border-bottom:1px solid var(--line);font-weight:700;background:#fafaf7}
+  thead th{text-align:left;padding:11px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--line);font-weight:700;background:#fafaf7}
   tbody td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
   tbody tr:last-child td{border-bottom:none}
   tbody tr:hover{background:#fafaf7}
-  .emp{font-weight:600}
-  .em-sub{font-size:12px;color:var(--muted)}
+  .emp{font-weight:600}.em-sub{font-size:12px;color:var(--muted)}
   .pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px}
-  .pill .dot{width:7px;height:7px;border-radius:50%}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
   .p-valid{background:var(--validbg);color:var(--valid)} .p-90{background:var(--d90bg);color:var(--d90)}
   .p-60{background:var(--d60bg);color:#a87a1f} .p-30{background:var(--d30bg);color:var(--d30)}
   .p-20{background:var(--d20bg);color:var(--d20)} .p-exp{background:var(--expbg);color:var(--exp)}
-  .row-act{display:flex;gap:6px;justify-content:flex-end}
-  .icon-btn{background:none;border:1px solid var(--line);border-radius:7px;width:30px;height:30px;
-    cursor:pointer;font-size:14px;color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
-  .icon-btn:hover{border-color:var(--d20);color:var(--d20)}
-  .icon-btn.edit:hover{border-color:var(--d90);color:var(--d90)}
-
-  /* Forms */
+  .notif-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  .nb{border-radius:var(--radius);padding:14px;border:1px solid var(--line);background:var(--card)}
+  .nb .n{font-size:22px;font-weight:800}.nb .l{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}
+  .nb.t90{border-top:3px solid var(--d90)} .nb.t60{border-top:3px solid var(--d60)}
+  .nb.t30{border-top:3px solid var(--d30)} .nb.t20{border-top:3px solid var(--d20)}
+  .mailrow{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .mailrow:last-child{border-bottom:none}.mailrow .when{flex:0 0 64px}.mailrow .body{flex:1;min-width:0}
+  .mailrow .to{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-word}
   .form-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;max-width:620px}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink-2)}
-  .field input,.field select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
-    font-size:14px;background:var(--paper);font-family:inherit}
-  .field input:focus,.field select:focus,.search:focus{outline:none;border-color:var(--d90);
-    box-shadow:0 0 0 3px rgba(47,127,176,.12)}
+  .field input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;background:var(--paper);font-family:inherit}
+  .field input:focus{outline:none;border-color:var(--d90);box-shadow:0 0 0 3px rgba(47,127,176,.12)}
   .hint{font-size:11.5px;color:var(--muted);margin-top:5px}
-  .btn{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:12px 20px;font-size:14px;
-    font-weight:700;cursor:pointer;font-family:inherit}
+  .btn{background:var(--ink);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
   .btn:hover{background:var(--ink-2)}
   .btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
   .btn.alt:hover{border-color:var(--ink)}
   .btn.sm{padding:8px 14px;font-size:12.5px}
   .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-
-  /* Import */
-  .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:34px 20px;text-align:center;
-    background:var(--card);cursor:pointer;transition:.15s}
-  .drop:hover,.drop.over{border-color:var(--d90);background:#f4f9fc}
-  .drop .big{font-size:15px;font-weight:700;margin:8px 0 4px}
-  .drop .sm{font-size:12.5px;color:var(--muted)}
-  .codebox{background:var(--ink);color:#d7e3f2;border-radius:10px;padding:14px 16px;font-size:12.5px;
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto;white-space:pre;line-height:1.6}
-
-  /* Notifications */
-  .notif-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-  .nb{border-radius:var(--radius);padding:14px;border:1px solid var(--line);background:var(--card)}
-  .nb .n{font-size:22px;font-weight:800} .nb .l{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}
-  .nb.t90{border-top:3px solid var(--d90)} .nb.t60{border-top:3px solid var(--d60)}
-  .nb.t30{border-top:3px solid var(--d30)} .nb.t20{border-top:3px solid var(--d20)}
-  .mailrow{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
-  .mailrow:last-child{border-bottom:none}
-  .mailrow .when{flex:0 0 64px}
-  .mailrow .body{flex:1;min-width:0}
-  .mailrow .to{font-size:12px;color:var(--muted);margin-top:3px;word-break:break-word}
-  .send-mailto{margin-left:auto;flex:0 0 auto}
-
-  /* Settings + empty */
   .empty{text-align:center;padding:50px 20px;color:var(--muted)}
-  .empty .ico{font-size:34px;opacity:.4} .empty p{margin:10px 0 16px;font-size:14px}
-  .note{background:var(--d90bg);border:1px solid #cfe2ee;border-radius:12px;padding:14px 16px;font-size:13px;color:#28536b;margin-bottom:20px}
-  .note b{color:#1d3a4d}
-  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);
-    color:#fff;padding:12px 20px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);
-    opacity:0;pointer-events:none;transition:.25s;z-index:60}
+  .empty .ico{font-size:34px;opacity:.4}.empty p{margin:10px 0 16px;font-size:14px}
+  .state{text-align:center;padding:60px 20px;color:var(--muted)}
+  .state .ico{font-size:40px;margin-bottom:10px}
+  .err{background:var(--expbg);border:1px solid #e7c3bd;color:var(--exp);border-radius:12px;padding:16px;font-size:13.5px;max-width:560px;margin:0 auto;text-align:left}
+  .err b{font-weight:700}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:30px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:60}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-  /* Modal */
-  .modal-bg{position:fixed;inset:0;background:rgba(15,27,45,.5);display:none;align-items:center;
-    justify-content:center;z-index:50;padding:16px}
-  .modal-bg.show{display:flex}
-  .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow:auto;
-    box-shadow:0 20px 60px rgba(0,0,0,.3)}
-  .modal-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-  .modal-head h3{margin:0;font-size:16px} .modal-body{padding:20px}
-  .x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
-
   @media (max-width:760px){
-    .bands{grid-template-columns:repeat(3,1fr)}
-    .notif-sum{grid-template-columns:repeat(2,1fr)}
-    .grid2{grid-template-columns:1fr}
-    .hide-sm{display:none}
-    .band .n{font-size:23px}
+    .bands{grid-template-columns:repeat(3,1fr)}.notif-sum{grid-template-columns:repeat(2,1fr)}
+    .hide-sm{display:none}.band .n{font-size:23px}
   }
-  @media (max-width:440px){ .bands{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:440px){.bands{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-
 <header class="top">
   <div class="top-inner">
     <div class="brand">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2l3 3 4 .5L17 9l1 4-4 1.5L12 18l-2-3.5L6 13l1-4-2-3.5L9 5z"/>
-        </svg>
-      </div>
-      <div>
-        <h1>CertTrack</h1>
-        <p>Certificate Renewal Tracker</p>
-      </div>
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 3 4 .5L17 9l1 4-4 1.5L12 18l-2-3.5L6 13l1-4-2-3.5L9 5z"/></svg></div>
+      <div><h1>CertTrack</h1><p>Live from your Sheet</p></div>
     </div>
     <div class="top-actions">
-      <button class="ghost-btn" onclick="exportCSV()">Export</button>
-      <button class="ghost-btn" onclick="runCheck()">Check now</button>
+      <a class="ghost-btn" id="sheetLink" target="_blank" rel="noopener">Open Sheet</a>
+      <button class="ghost-btn" onclick="loadData()"><span id="refIcon">&#8635;</span> Refresh</button>
     </div>
   </div>
 </header>
-
 <nav class="tabs">
   <div class="tabs-inner" id="tabsInner">
     <button class="tab active" data-tab="dashboard">Dashboard</button>
     <button class="tab" data-tab="records">Records <span class="ct" id="ctRecords">0</span></button>
-    <button class="tab" data-tab="add">Add</button>
-    <button class="tab" data-tab="import">Import</button>
-    <button class="tab" data-tab="notifications">Notifications <span class="ct" id="ctNotif">0</span></button>
+    <button class="tab" data-tab="notifications">Due now <span class="ct" id="ctNotif">0</span></button>
     <button class="tab" data-tab="settings">Settings</button>
   </div>
 </nav>
-
 <div class="wrap">
-
-  <!-- DASHBOARD -->
   <section id="dashboard" class="active">
     <h2 class="title">Status overview</h2>
-    <p class="sub" id="dashSub">Tracking certificate expiry across your team.</p>
-    <div class="bands" id="bands"></div>
-    <div class="panel">
-      <div class="panel-head">
-        <h3 id="listHead">All records</h3>
-        <input class="search" id="dashSearch" placeholder="Search name, email, certificate…" oninput="renderDash()">
+    <p class="sub" id="dashSub">Loading&hellip;</p>
+    <div class="synced" id="synced" style="display:none"><span class="dotlive"></span><span id="syncedText"></span></div>
+    <div id="dashState"></div>
+    <div id="dashMain" style="display:none">
+      <div class="bands" id="bands"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="listHead">All records</h3>
+          <input class="search" id="dashSearch" placeholder="Search name, email, certificate&hellip;" oninput="renderDash()">
+        </div>
+        <div id="dashList"></div>
       </div>
-      <div id="dashList"></div>
     </div>
   </section>
-
-  <!-- RECORDS -->
   <section id="records">
     <h2 class="title">All records</h2>
-    <p class="sub">Every employee certificate you're tracking. Edit or remove any entry.</p>
+    <p class="sub">Everything currently in the Sheet. To add or edit, use the Sheet &mdash; changes appear here on Refresh.</p>
     <div class="panel">
-      <div class="panel-head">
-        <h3>Records</h3>
-        <input class="search" id="recSearch" placeholder="Search…" oninput="renderRecords()">
-      </div>
+      <div class="panel-head"><h3>Records</h3><input class="search" id="recSearch" placeholder="Search&hellip;" oninput="renderRecords()"></div>
       <div id="recList"></div>
     </div>
   </section>
-
-  <!-- ADD -->
-  <section id="add">
-    <h2 class="title" id="addTitle">Add a certificate</h2>
-    <p class="sub">Enter one employee certificate. Dates use your device's date picker.</p>
-    <div class="form-card">
-      <input type="hidden" id="editId">
-      <div class="grid2">
-        <div class="field"><label>Employee name</label><input id="fName" placeholder="e.g. Maria Lopez"></div>
-        <div class="field"><label>Employee email</label><input id="fEmail" type="email" placeholder="maria@company.com"></div>
-      </div>
-      <div class="field"><label>Certificate / license name</label><input id="fCert" placeholder="e.g. CPR Certification, OSHA 30, RN License"></div>
-      <div class="grid2">
-        <div class="field"><label>Issued on <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="fIssue" type="date"></div>
-        <div class="field"><label>Expires on</label><input id="fExpiry" type="date"></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn" onclick="saveRecord()" id="saveBtn">Save certificate</button>
-        <button class="btn alt" onclick="clearForm()">Clear</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- IMPORT -->
-  <section id="import">
-    <h2 class="title">Bulk import</h2>
-    <p class="sub">Upload a CSV to add many records at once. Existing records are kept; new rows are added.</p>
-    <div class="drop" id="drop">
-      <div style="font-size:30px">⬆</div>
-      <div class="big">Tap or drop a CSV file here</div>
-      <div class="sm">Columns: Employee Name, Employee Email, Certificate, Issue Date, Expiry Date</div>
-      <input type="file" id="fileInput" accept=".csv,text/csv" style="display:none">
-    </div>
-    <div class="btn-row" style="margin-top:14px">
-      <button class="btn alt sm" onclick="downloadTemplate()">Download CSV template</button>
-      <button class="btn alt sm" onclick="loadSample()">Load 5 sample rows</button>
-    </div>
-    <div id="importResult" style="margin-top:16px"></div>
-    <p class="sub" style="margin-top:22px;margin-bottom:8px"><b>Date format:</b> YYYY-MM-DD works best (e.g. 2026-09-15). MM/DD/YYYY is also accepted.</p>
-  </section>
-
-  <!-- NOTIFICATIONS -->
   <section id="notifications">
-    <h2 class="title">Notifications</h2>
-    <p class="sub">Who would be emailed today at each alert window. Employees are notified, with a copy to the HR admin.</p>
-    <div class="note" id="hrNote"></div>
+    <h2 class="title">Due now</h2>
+    <p class="sub">Who the mailer will email at each window. The daily script sends these automatically &mdash; this is the preview.</p>
     <div class="notif-sum" id="notifSum"></div>
-    <div class="panel">
-      <div class="panel-head"><h3>Queued alerts — full list</h3></div>
-      <div id="notifList"></div>
-    </div>
+    <div class="panel"><div class="panel-head"><h3>Queued alerts</h3></div><div id="notifList"></div></div>
   </section>
-
-  <!-- SETTINGS -->
   <section id="settings">
     <h2 class="title">Settings</h2>
-    <p class="sub">Alert windows and the HR admin who gets copied on every notice.</p>
+    <p class="sub">Display options for this dashboard only. None of this affects the emails &mdash; those live in the Apps Script.</p>
     <div class="form-card">
-      <div class="field"><label>HR admin name</label><input id="sHrName" placeholder="e.g. Rosa Martinez" oninput="saveSettings()"></div>
-      <div class="field"><label>HR admin email</label><input id="sHrEmail" type="email" placeholder="hr@company.com" oninput="saveSettings()"></div>
-      <div class="field"><label>Organization name</label><input id="sOrg" placeholder="e.g. Bright Care Inc." oninput="saveSettings()"></div>
       <div class="field"><label>Alert windows (days before expiry)</label><input id="sWindows" value="90, 60, 30, 20" oninput="saveSettings()"></div>
-      <div class="hint">Comma-separated. These set when an alert appears for each certificate.</div>
+      <div class="hint">Controls the color bands shown here. Keep these matching the script's WINDOWS for an accurate preview.</div>
     </div>
     <div class="form-card" style="margin-top:18px">
-      <h3 style="margin:0 0 6px;font-size:15px">Data</h3>
-      <p class="sub" style="margin-bottom:14px">All data is stored on this device only. Export regularly to keep a backup.</p>
-      <div class="btn-row">
-        <button class="btn alt sm" onclick="exportCSV()">Export all to CSV</button>
-        <button class="btn alt sm" onclick="wipeAll()" style="color:var(--d20);border-color:#e7c3bd">Erase all data</button>
-      </div>
+      <div class="field"><label>Sheet connection URL</label><input id="sUrl" oninput="saveSettings()"></div>
+      <div class="hint">The Apps Script web-app URL this dashboard reads from. Change only if the script is redeployed with a new URL.</div>
+      <div class="btn-row"><button class="btn sm" onclick="loadData()">Reconnect &amp; refresh</button>
+        <button class="btn alt sm" onclick="exportCSV()">Export current view to CSV</button></div>
     </div>
   </section>
-
 </div>
-
-<!-- Modal -->
-<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <div class="modal-head"><h3 id="modalTitle">Details</h3><button class="x" onclick="closeModal()">×</button></div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-/* ---------- storage ---------- */
-var DB_KEY='certtrack.records.v1', SET_KEY='certtrack.settings.v1';
-var records=[], settings={hrName:'',hrEmail:'',org:'',windows:[90,60,30,20]};
-var dashFilter=null;
+var DEFAULT_URL = "https://script.google.com/macros/s/AKfycbxWT0OxUD9AlIjdb-V8gmcCeLb8GNpNTzVU_IetXKoU1fbv1UbEyNKQNosLI_ZLCdIA/exec";
+var SHEET_URL  = "https://docs.google.com/spreadsheets/d/1DMe_uL7lERLeCTF1LoouI9TXrM4uqxL3u5sWgCy5hsE/edit";
+var URL_KEY="certtrack.url.v1", WIN_KEY="certtrack.windows.v1";
+var records=[], windows=[90,60,30,20], dashFilter=null, apiUrl=DEFAULT_URL;
 
-function load(){
-  try{records=JSON.parse(localStorage.getItem(DB_KEY))||[]}catch(e){records=[]}
-  try{var s=JSON.parse(localStorage.getItem(SET_KEY));if(s)settings=Object.assign(settings,s)}catch(e){}
+function loadPrefs(){
+  try{var u=localStorage.getItem(URL_KEY); if(u) apiUrl=u;}catch(e){}
+  try{var w=JSON.parse(localStorage.getItem(WIN_KEY)); if(w&&w.length) windows=w;}catch(e){}
+  setVal('sUrl',apiUrl); setVal('sWindows',windows.join(', '));
+  document.getElementById('sheetLink').href=SHEET_URL;
 }
-function save(){localStorage.setItem(DB_KEY,JSON.stringify(records))}
-function saveSet(){localStorage.setItem(SET_KEY,JSON.stringify(settings))}
-
-/* ---------- helpers ---------- */
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
-function todayStart(){var d=new Date();d.setHours(0,0,0,0);return d}
-function parseDate(s){
-  if(!s)return null; s=String(s).trim(); if(!s)return null;
-  var m;
-  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)) return new Date(+m[1],+m[2]-1,+m[3]);
-  if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)) return new Date(+m[3],+m[1]-1,+m[2]);
-  var d=new Date(s); return isNaN(d)?null:d;
+function saveSettings(){
+  var w=val('sWindows').split(',').map(function(x){return parseInt(x.trim(),10)}).filter(function(n){return !isNaN(n)&&n>0});
+  if(w.length){windows=w.sort(function(a,b){return b-a});try{localStorage.setItem(WIN_KEY,JSON.stringify(windows))}catch(e){}}
+  var u=val('sUrl'); if(u){apiUrl=u;try{localStorage.setItem(URL_KEY,u)}catch(e){}}
+  if(records.length) refreshAll();
 }
-function fmt(d){if(!d)return '—';return d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}
-function daysLeft(r){
-  var e=parseDate(r.expiry); if(!e)return null;
-  e.setHours(0,0,0,0);
-  return Math.round((e-todayStart())/86400000);
+function loadData(){
+  document.getElementById('refIcon').className='spin';
+  document.getElementById('dashSub').textContent='Loading from your Sheet\u2026';
+  document.getElementById('dashMain').style.display='none';
+  document.getElementById('synced').style.display='none';
+  document.getElementById('dashState').innerHTML='<div class="state"><div class="ico spin">\u27f3</div>Reading the Sheet\u2026</div>';
+  fetch(apiUrl,{method:'GET',redirect:'follow'})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      document.getElementById('refIcon').className='';
+      if(!d||!d.ok){throw new Error(d&&d.error?d.error:'Unexpected response');}
+      records=(d.rows||[]).map(function(x){return {name:x.name||'',email:x.email||'',cert:x.cert||'',issue:x.issue||'',expiry:x.expiry||''}});
+      document.getElementById('dashState').innerHTML='';
+      document.getElementById('dashMain').style.display='block';
+      var t=new Date();
+      document.getElementById('synced').style.display='flex';
+      document.getElementById('syncedText').textContent='Live \u00b7 synced '+t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' \u00b7 '+records.length+' record'+(records.length!==1?'s':'');
+      refreshAll();
+      toast('Synced '+records.length+' record'+(records.length!==1?'s':''));
+    })
+    .catch(function(err){
+      document.getElementById('refIcon').className='';
+      document.getElementById('dashSub').textContent='Could not reach the Sheet.';
+      document.getElementById('dashMain').style.display='none';
+      document.getElementById('dashState').innerHTML=
+        '<div class="err"><b>Couldn\u2019t load data.</b><br>'+
+        'The dashboard couldn\u2019t read the Sheet. Common causes:<br>'+
+        '\u2022 The web app wasn\u2019t deployed with access set to <b>Anyone</b>.<br>'+
+        '\u2022 The connection URL in Settings is wrong, or the script was redeployed (new URL).<br><br>'+
+        'Tap <b>Refresh</b> to retry.<br>Error: '+esc(String(err.message||err))+'</div>';
+    });
 }
-function bandOf(dl){
-  if(dl===null)return null;
-  if(dl<0)return 'exp';
-  var w=settings.windows.slice().sort(function(a,b){return a-b}); // [20,30,60,90]
-  for(var i=0;i<w.length;i++){ if(dl<=w[i]) return 'd'+w[i]; }
-  return 'valid';
-}
-// canonical band keys we render: exp, d20, d30, d60, d90, valid (driven by settings.windows)
-function statusMeta(dl){
-  if(dl===null)return {key:'none',label:'No date',cls:'p-valid'};
-  if(dl<0)return {key:'exp',label:'Expired '+Math.abs(dl)+'d ago',cls:'p-exp'};
-  var w=settings.windows.slice().sort(function(a,b){return a-b});
-  for(var i=0;i<w.length;i++){
-    if(dl<=w[i]){
-      var cls = w[i]<=20?'p-20':w[i]<=30?'p-30':w[i]<=60?'p-60':'p-90';
-      return {key:'d'+w[i],label:dl+'d left',cls:cls};
-    }
-  }
-  return {key:'valid',label:dl+'d left',cls:'p-valid'};
-}
-
-/* ---------- tabs ---------- */
 document.getElementById('tabsInner').addEventListener('click',function(e){
   var b=e.target.closest('.tab'); if(!b)return; switchTab(b.dataset.tab);
 });
 function switchTab(id){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===id)});
   document.querySelectorAll('section').forEach(function(s){s.classList.toggle('active',s.id===id)});
-  if(id==='dashboard')renderDash();
-  if(id==='records')renderRecords();
-  if(id==='notifications')renderNotif();
   window.scrollTo(0,0);
 }
-
-/* ---------- dashboard ---------- */
+function todayStart(){var d=new Date();d.setHours(0,0,0,0);return d}
+function parseDate(s){if(!s)return null;s=String(s).trim();if(!s)return null;var m;
+  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))return new Date(+m[1],+m[2]-1,+m[3]);
+  if(m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))return new Date(+m[3],+m[1]-1,+m[2]);
+  var d=new Date(s);return isNaN(d)?null:d;}
+function fmt(d){if(!d)return '\u2014';return d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}
+function daysLeft(r){var e=parseDate(r.expiry);if(!e)return null;e.setHours(0,0,0,0);return Math.round((e-todayStart())/86400000);}
+function bandOf(dl){if(dl===null)return null;if(dl<0)return 'exp';
+  var w=windows.slice().sort(function(a,b){return a-b});
+  for(var i=0;i<w.length;i++){if(dl<=w[i])return 'd'+w[i];}return 'valid';}
+function statusMeta(dl){if(dl===null)return{label:'No date',cls:'p-valid'};
+  if(dl<0)return{label:'Expired '+Math.abs(dl)+'d ago',cls:'p-exp'};
+  var w=windows.slice().sort(function(a,b){return a-b});
+  for(var i=0;i<w.length;i++){if(dl<=w[i]){var c=w[i]<=20?'p-20':w[i]<=30?'p-30':w[i]<=60?'p-60':'p-90';return{label:dl+'d left',cls:c};}}
+  return{label:dl+'d left',cls:'p-valid'};}
 function bandConfig(){
-  // build display bands from settings windows + fixed valid/expired
-  var w=settings.windows.slice().sort(function(a,b){return b-a}); // [90,60,30,20]
-  var arr=[{key:'exp',label:'Expired',cls:'b-exp'}];
-  arr.push({key:'valid',label:'Valid',cls:'b-valid'});
-  var clsmap={};
-  w.forEach(function(d){
-    var c = d<=20?'b-20':d<=30?'b-30':d<=60?'b-60':'b-90';
-    arr.push({key:'d'+d,label:'≤ '+d+' days',cls:c});
-  });
-  // order: expired, each window asc urgency? keep expired, 20,30,60,90, valid
-  var ordered=[arr[0]];
-  w.slice().reverse().forEach(function(d){ // 20,30,60,90
-    var c=d<=20?'b-20':d<=30?'b-30':d<=60?'b-60':'b-90';
-    ordered.push({key:'d'+d,label:'≤ '+d+'d',cls:c});
-  });
-  ordered.push(arr[1]);
+  var w=windows.slice().sort(function(a,b){return b-a});
+  var ordered=[{key:'exp',label:'Expired',cls:'b-exp'}];
+  w.slice().reverse().forEach(function(d){var c=d<=20?'b-20':d<=30?'b-30':d<=60?'b-60':'b-90';ordered.push({key:'d'+d,label:'\u2264 '+d+'d',cls:c});});
+  ordered.push({key:'valid',label:'Valid',cls:'b-valid'});
   return ordered;
 }
-function counts(){
-  var c={};
-  records.forEach(function(r){
-    var b=bandOf(daysLeft(r)); if(b===null)b='none';
-    c[b]=(c[b]||0)+1;
-  });
-  return c;
-}
-function renderBands(){
-  var c=counts(), cfg=bandConfig(), html='';
-  cfg.forEach(function(b){
-    var sel = dashFilter===b.key?' sel':'';
-    html+='<div class="band '+b.cls+sel+'" onclick="filterDash(\''+b.key+'\')">'+
-      '<div class="bar"></div><div class="n">'+(c[b.key]||0)+'</div><div class="l">'+b.label+'</div></div>';
-  });
-  document.getElementById('bands').innerHTML=html;
-}
-function filterDash(k){ dashFilter = dashFilter===k?null:k; renderDash(); }
+function counts(){var c={};records.forEach(function(r){var b=bandOf(daysLeft(r));if(b===null)b='none';c[b]=(c[b]||0)+1;});return c;}
+function renderBands(){var c=counts(),cfg=bandConfig(),h='';
+  cfg.forEach(function(b){var sel=dashFilter===b.key?' sel':'';
+    h+='<div class="band '+b.cls+sel+'" onclick="filterDash(\''+b.key+'\')"><div class="bar"></div><div class="n">'+(c[b.key]||0)+'</div><div class="l">'+b.label+'</div></div>';});
+  document.getElementById('bands').innerHTML=h;}
+function filterDash(k){dashFilter=dashFilter===k?null:k;renderDash();}
 function renderDash(){
   renderBands();
-  var q=(document.getElementById('dashSearch').value||'').toLowerCase();
-  var rows=records.map(function(r){return {r:r,dl:daysLeft(r),b:bandOf(daysLeft(r))}});
-  if(dashFilter) rows=rows.filter(function(x){return (x.b||'none')===dashFilter});
-  if(q) rows=rows.filter(function(x){return (x.r.name+' '+x.r.email+' '+x.r.cert).toLowerCase().indexOf(q)>-1});
-  rows.sort(function(a,b){
-    var av=a.dl===null?99999:a.dl, bv=b.dl===null?99999:b.dl; return av-bv;
-  });
-  document.getElementById('listHead').textContent = dashFilter? 'Filtered records' : 'All records';
-  document.getElementById('dashList').innerHTML = rows.length? buildTable(rows) : emptyState();
-  document.getElementById('dashSub').textContent =
-    records.length? 'Tracking '+records.length+' certificate'+(records.length>1?'s':'')+(settings.org?' for '+settings.org:'')+'.' :
-    'No certificates yet — add one or import a CSV to begin.';
+  var q=(val('dashSearch')||'').toLowerCase();
+  var rows=records.map(function(r){return{r:r,dl:daysLeft(r),b:bandOf(daysLeft(r))}});
+  if(dashFilter)rows=rows.filter(function(x){return(x.b||'none')===dashFilter});
+  if(q)rows=rows.filter(function(x){return(x.r.name+' '+x.r.email+' '+x.r.cert).toLowerCase().indexOf(q)>-1});
+  rows.sort(function(a,b){return(a.dl===null?99999:a.dl)-(b.dl===null?99999:b.dl)});
+  document.getElementById('listHead').textContent=dashFilter?'Filtered records':'All records';
+  document.getElementById('dashSub').textContent=records.length?('Tracking '+records.length+' certificate'+(records.length!==1?'s':'')+'.'):'No records in the Sheet yet \u2014 add rows in the Sheet, then Refresh.';
+  document.getElementById('dashList').innerHTML=rows.length?buildTable(rows):emptyState();
 }
 function buildTable(rows){
-  var h='<table><thead><tr><th>Employee</th><th class="hide-sm">Certificate</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>';
-  rows.forEach(function(x){
-    var r=x.r, m=statusMeta(x.dl);
-    h+='<tr>'+
-      '<td><div class="emp">'+esc(r.name)+'</div><div class="em-sub">'+esc(r.email||'no email')+'</div>'+
-        '<div class="em-sub hide-sm" style="display:none">'+esc(r.cert)+'</div></td>'+
-      '<td class="hide-sm">'+esc(r.cert)+'</td>'+
-      '<td>'+fmt(parseDate(r.expiry))+'</td>'+
-      '<td><span class="pill '+m.cls+'"><span class="dot" style="background:currentColor"></span>'+m.label+'</span></td>'+
-      '<td><div class="row-act">'+
-        '<button class="icon-btn edit" title="Edit" onclick="editRecord(\''+r.id+'\')">✎</button>'+
-        '<button class="icon-btn" title="Delete" onclick="delRecord(\''+r.id+'\')">🗑</button>'+
-      '</div></td></tr>';
-  });
+  var h='<table><thead><tr><th>Employee</th><th class="hide-sm">Certificate</th><th>Expires</th><th>Status</th></tr></thead><tbody>';
+  rows.forEach(function(x){var r=x.r,m=statusMeta(x.dl);
+    h+='<tr><td><div class="emp">'+esc(r.name)+'</div><div class="em-sub">'+esc(r.email||'no email')+'</div></td>'+
+      '<td class="hide-sm">'+esc(r.cert)+'</td><td>'+fmt(parseDate(r.expiry))+'</td>'+
+      '<td><span class="pill '+m.cls+'"><span class="dot"></span>'+m.label+'</span></td></tr>';});
   return h+'</tbody></table>';
 }
-function emptyState(){
-  return '<div class="empty"><div class="ico">📭</div><p>Nothing here yet.</p>'+
-    '<button class="btn sm" onclick="switchTab(\'add\')">Add a certificate</button></div>';
-}
-
-/* ---------- records tab ---------- */
+function emptyState(){return '<div class="empty"><div class="ico">\ud83d\udced</div><p>Nothing matches.</p></div>';}
 function renderRecords(){
   document.getElementById('ctRecords').textContent=records.length;
-  var q=(document.getElementById('recSearch').value||'').toLowerCase();
-  var rows=records.map(function(r){return {r:r,dl:daysLeft(r),b:bandOf(daysLeft(r))}});
-  if(q) rows=rows.filter(function(x){return (x.r.name+' '+x.r.email+' '+x.r.cert).toLowerCase().indexOf(q)>-1});
-  rows.sort(function(a,b){return (a.dl===null?99999:a.dl)-(b.dl===null?99999:b.dl)});
-  document.getElementById('recList').innerHTML = rows.length? buildTable(rows) : emptyState();
+  var q=(val('recSearch')||'').toLowerCase();
+  var rows=records.map(function(r){return{r:r,dl:daysLeft(r)}});
+  if(q)rows=rows.filter(function(x){return(x.r.name+' '+x.r.email+' '+x.r.cert).toLowerCase().indexOf(q)>-1});
+  rows.sort(function(a,b){return(a.dl===null?99999:a.dl)-(b.dl===null?99999:b.dl)});
+  document.getElementById('recList').innerHTML=rows.length?buildTable(rows):'<div class="empty"><div class="ico">\ud83d\udced</div><p>No records yet.</p></div>';
 }
-
-/* ---------- add / edit ---------- */
-function saveRecord(){
-  var name=val('fName'),email=val('fEmail'),cert=val('fCert'),issue=val('fIssue'),expiry=val('fExpiry');
-  if(!name||!cert||!expiry){toast('Name, certificate, and expiry date are required');return;}
-  if(email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast('That email doesn\'t look right');return;}
-  var id=val('editId');
-  if(id){
-    var r=records.find(function(x){return x.id===id});
-    if(r){r.name=name;r.email=email;r.cert=cert;r.issue=issue;r.expiry=expiry;}
-    toast('Certificate updated');
-  }else{
-    records.push({id:uid(),name:name,email:email,cert:cert,issue:issue,expiry:expiry});
-    toast('Certificate added');
-  }
-  save();clearForm();refreshAll();switchTab('dashboard');
-}
-function editRecord(id){
-  var r=records.find(function(x){return x.id===id}); if(!r)return;
-  setVal('editId',r.id);setVal('fName',r.name);setVal('fEmail',r.email);setVal('fCert',r.cert);
-  setVal('fIssue',r.issue||'');setVal('fExpiry',r.expiry||'');
-  document.getElementById('addTitle').textContent='Edit certificate';
-  document.getElementById('saveBtn').textContent='Update certificate';
-  switchTab('add');
-}
-function delRecord(id){
-  var r=records.find(function(x){return x.id===id});
-  showModal('Delete record','<p style="font-size:14px">Remove <b>'+esc(r.name)+'</b> — '+esc(r.cert)+'?</p>'+
-    '<div class="btn-row" style="margin-top:16px"><button class="btn" style="background:var(--exp)" onclick="confirmDel(\''+id+'\')">Delete</button>'+
-    '<button class="btn alt" onclick="closeModal()">Cancel</button></div>');
-}
-function confirmDel(id){records=records.filter(function(x){return x.id!==id});save();closeModal();refreshAll();toast('Record deleted');}
-function clearForm(){['editId','fName','fEmail','fCert','fIssue','fExpiry'].forEach(function(i){setVal(i,'')});
-  document.getElementById('addTitle').textContent='Add a certificate';
-  document.getElementById('saveBtn').textContent='Save certificate';}
-
-/* ---------- import ---------- */
-var drop=document.getElementById('drop'),fileInput=document.getElementById('fileInput');
-drop.addEventListener('click',function(){fileInput.click()});
-fileInput.addEventListener('change',function(e){if(e.target.files[0])readFile(e.target.files[0])});
-['dragover','dragenter'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over')})});
-['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over')})});
-drop.addEventListener('drop',function(e){if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])});
-function readFile(f){var r=new FileReader();r.onload=function(){importCSV(r.result)};r.readAsText(f);}
-
-function parseCSV(text){
-  var rows=[],row=[],cur='',q=false;
-  for(var i=0;i<text.length;i++){
-    var c=text[i];
-    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++} else q=false } else cur+=c; }
-    else{
-      if(c==='"')q=true;
-      else if(c===','){row.push(cur);cur=''}
-      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur=''}
-      else if(c==='\r'){}
-      else cur+=c;
-    }
-  }
-  if(cur!==''||row.length){row.push(cur);rows.push(row)}
-  return rows.filter(function(r){return r.some(function(c){return c.trim()!==''})});
-}
-function importCSV(text){
-  var rows=parseCSV(text); if(!rows.length){showImport('No rows found in that file.',true);return;}
-  var head=rows[0].map(function(h){return h.trim().toLowerCase()});
-  function idx(){for(var a=0;a<arguments.length;a++){var k=head.indexOf(arguments[a]);if(k>-1)return k}return -1}
-  var iName=idx('employee name','name','employee'),
-      iEmail=idx('employee email','email'),
-      iCert=idx('certificate','certificate name','cert','license'),
-      iIssue=idx('issue date','issued','issue'),
-      iExp=idx('expiry date','expiry','expires','expiration','expiration date');
-  if(iName<0||iCert<0||iExp<0){
-    showImport('Couldn\'t find the required columns. Need at least: Employee Name, Certificate, Expiry Date. Use the template button below.',true);return;
-  }
-  var added=0,skipped=0;
-  for(var i=1;i<rows.length;i++){
-    var r=rows[i],name=(r[iName]||'').trim(),cert=(r[iCert]||'').trim(),exp=(r[iExp]||'').trim();
-    if(!name||!cert||!exp){skipped++;continue;}
-    records.push({id:uid(),name:name,email:iEmail>-1?(r[iEmail]||'').trim():'',cert:cert,
-      issue:iIssue>-1?(r[iIssue]||'').trim():'',expiry:exp});
-    added++;
-  }
-  save();refreshAll();
-  showImport('<b>'+added+'</b> record'+(added!==1?'s':'')+' imported'+(skipped?', '+skipped+' row(s) skipped (missing required fields)':'')+'.',false);
-  if(added)setTimeout(function(){switchTab('dashboard')},900);
-}
-function showImport(msg,err){
-  document.getElementById('importResult').innerHTML=
-    '<div class="note" style="'+(err?'background:var(--expbg);border-color:#e7c3bd;color:var(--exp)':'')+'">'+msg+'</div>';
-}
-function downloadTemplate(){
-  var csv='Employee Name,Employee Email,Certificate,Issue Date,Expiry Date\nMaria Lopez,maria@company.com,CPR Certification,2024-09-15,2026-09-15\n';
-  dl(csv,'certtrack-template.csv');
-}
-function loadSample(){
-  var base=todayStart(),mk=function(off){var d=new Date(base);d.setDate(d.getDate()+off);return d.toISOString().slice(0,10)};
-  var samp=[
-    ['Maria Lopez','maria@company.com','CPR Certification',mk(15)],
-    ['James Okafor','james@company.com','OSHA 30',mk(28)],
-    ['Priya Shah','priya@company.com','RN License',mk(55)],
-    ['Daniel Reed','daniel@company.com','Forklift Operator',mk(88)],
-    ['Aisha Bello','aisha@company.com','First Aid',mk(-5)]
-  ];
-  samp.forEach(function(s){records.push({id:uid(),name:s[0],email:s[1],cert:s[2],issue:'',expiry:s[3]})});
-  save();refreshAll();showImport('<b>5</b> sample records loaded.',false);setTimeout(function(){switchTab('dashboard')},700);
-}
-
-/* ---------- notifications ---------- */
 function dueAlerts(){
-  // a record "fires" at the smallest window >= daysLeft, only when daysLeft<=largest window and >=0, OR expired
-  var w=settings.windows.slice().sort(function(a,b){return a-b}); // asc
-  var out=[];
-  records.forEach(function(r){
-    var dl=daysLeft(r); if(dl===null)return;
-    if(dl<0){ out.push({r:r,window:'expired',dl:dl}); return; }
-    // find tightest window the cert currently falls inside
-    for(var i=0;i<w.length;i++){ if(dl<=w[i]){ out.push({r:r,window:w[i],dl:dl}); break; } }
-  });
+  var w=windows.slice().sort(function(a,b){return a-b}),out=[];
+  records.forEach(function(r){var dl=daysLeft(r);if(dl===null)return;
+    if(dl<0){out.push({r:r,window:'expired',dl:dl});return;}
+    for(var i=0;i<w.length;i++){if(dl<=w[i]){out.push({r:r,window:w[i],dl:dl});break;}}});
   return out;
 }
 function renderNotif(){
-  var alerts=dueAlerts();
-  document.getElementById('ctNotif').textContent=alerts.length;
-  var hr = settings.hrEmail? (esc(settings.hrName||'HR admin')+' &lt;'+esc(settings.hrEmail)+'&gt;') : '<i>not set — add one in Settings</i>';
-  document.getElementById('hrNote').innerHTML='<b>HR admin copy:</b> '+hr+'. Each alert below would email the employee, copying this address.';
-  // summary
-  var w=settings.windows.slice().sort(function(a,b){return b-a}); // 90,60,30,20
-  var sum='';
-  w.forEach(function(d){
-    var n=alerts.filter(function(a){return a.window===d}).length;
-    var t=d<=20?'t20':d<=30?'t30':d<=60?'t60':'t90';
-    sum+='<div class="nb '+t+'"><div class="n">'+n+'</div><div class="l">'+d+'-day window</div></div>';
-  });
+  var alerts=dueAlerts();document.getElementById('ctNotif').textContent=alerts.length;
+  var w=windows.slice().sort(function(a,b){return b-a}),sum='';
+  w.forEach(function(d){var n=alerts.filter(function(a){return a.window===d}).length;var t=d<=20?'t20':d<=30?'t30':d<=60?'t60':'t90';
+    sum+='<div class="nb '+t+'"><div class="n">'+n+'</div><div class="l">'+d+'-day window</div></div>';});
   document.getElementById('notifSum').innerHTML=sum;
-  // expired count note
-  var expN=alerts.filter(function(a){return a.window==='expired'}).length;
-  // full list
   alerts.sort(function(a,b){return a.dl-b.dl});
-  if(!alerts.length){document.getElementById('notifList').innerHTML='<div class="empty"><div class="ico">✅</div><p>No alerts due today. Everything is outside the alert windows.</p></div>';return;}
+  if(!alerts.length){document.getElementById('notifList').innerHTML='<div class="empty"><div class="ico">\u2705</div><p>No alerts due today.</p></div>';return;}
   var html='';
-  alerts.forEach(function(a){
-    var r=a.r, expired=a.window==='expired';
-    var label = expired? 'EXPIRED' : a.window+'d';
-    var cls = expired?'p-exp':a.window<=20?'p-20':a.window<=30?'p-30':a.window<=60?'p-60':'p-90';
-    var subj = expired? 'EXPIRED: '+r.cert : 'Renewal due in '+a.dl+' days: '+r.cert;
-    var to = r.email||'(no employee email)';
-    html+='<div class="mailrow">'+
-      '<div class="when"><span class="pill '+cls+'">'+label+'</span></div>'+
-      '<div class="body"><div class="emp">'+esc(r.name)+' — '+esc(r.cert)+'</div>'+
-        '<div class="to">To: '+esc(to)+(settings.hrEmail?' · cc: '+esc(settings.hrEmail):'')+'</div>'+
-        '<div class="to">Expires '+fmt(parseDate(r.expiry))+(expired?' · '+Math.abs(a.dl)+' days ago':'')+'</div></div>'+
-      (r.email?'<button class="btn alt sm send-mailto" onclick="sendMailto(\''+r.id+'\','+(expired?-1:a.dl)+')">Open email</button>':'')+
-      '</div>';
-  });
+  alerts.forEach(function(a){var r=a.r,expired=a.window==='expired';
+    var label=expired?'EXPIRED':a.window+'d';var cls=expired?'p-exp':a.window<=20?'p-20':a.window<=30?'p-30':a.window<=60?'p-60':'p-90';
+    html+='<div class="mailrow"><div class="when"><span class="pill '+cls+'"><span class="dot"></span>'+label+'</span></div>'+
+      '<div class="body"><div class="emp">'+esc(r.name)+' \u2014 '+esc(r.cert)+'</div>'+
+      '<div class="to">To: '+esc(r.email||'(no email)')+'</div>'+
+      '<div class="to">Expires '+fmt(parseDate(r.expiry))+(expired?' \u00b7 '+Math.abs(a.dl)+'d ago':'')+'</div></div></div>';});
   document.getElementById('notifList').innerHTML=html;
 }
-function sendMailto(id,dl){
-  var r=records.find(function(x){return x.id===id}); if(!r)return;
-  var org=settings.org||'our organization';
-  var expired=dl<0;
-  var subj=expired?('Action needed: '+r.cert+' has expired'):(r.cert+' expires in '+dl+' days');
-  var body='Hello '+r.name+',%0D%0A%0D%0A'+
-    (expired
-      ? 'Our records show your '+r.cert+' expired on '+fmt(parseDate(r.expiry))+'. Please renew it as soon as possible and send confirmation to '+org+'.'
-      : 'This is a reminder that your '+r.cert+' is due to expire on '+fmt(parseDate(r.expiry))+' — '+dl+' days from today. Please begin the renewal process so your certification stays current.')+
-    '%0D%0A%0D%0AThank you,%0D%0A'+(settings.hrName||'HR')+(settings.org?'%0D%0A'+settings.org:'');
-  var cc=settings.hrEmail?'&cc='+encodeURIComponent(settings.hrEmail):'';
-  window.location.href='mailto:'+encodeURIComponent(r.email)+'?subject='+encodeURIComponent(subj)+cc+'&body='+body;
-}
-
-/* ---------- settings ---------- */
-function loadSettings(){
-  setVal('sHrName',settings.hrName);setVal('sHrEmail',settings.hrEmail);setVal('sOrg',settings.org);
-  setVal('sWindows',settings.windows.join(', '));
-}
-function saveSettings(){
-  settings.hrName=val('sHrName');settings.hrEmail=val('sHrEmail');settings.org=val('sOrg');
-  var w=val('sWindows').split(',').map(function(x){return parseInt(x.trim(),10)}).filter(function(n){return !isNaN(n)&&n>0});
-  if(w.length)settings.windows=w.sort(function(a,b){return b-a});
-  saveSet();refreshAll();
-}
-function wipeAll(){
-  showModal('Erase everything','<p style="font-size:14px">This permanently deletes all '+records.length+' record(s) on this device. Export first if you want a backup.</p>'+
-    '<div class="btn-row" style="margin-top:16px"><button class="btn" style="background:var(--exp)" onclick="doWipe()">Erase all</button>'+
-    '<button class="btn alt" onclick="closeModal()">Cancel</button></div>');
-}
-function doWipe(){records=[];save();closeModal();refreshAll();toast('All data erased');}
-
-/* ---------- export ---------- */
 function exportCSV(){
-  if(!records.length){toast('Nothing to export yet');return;}
+  if(!records.length){toast('Nothing to export');return;}
   var rows=[['Employee Name','Employee Email','Certificate','Issue Date','Expiry Date','Days Left','Status']];
-  records.forEach(function(r){
-    var dl=daysLeft(r),m=statusMeta(dl);
-    rows.push([r.name,r.email||'',r.cert,r.issue||'',r.expiry||'',dl===null?'':dl,m.label]);
-  });
+  records.forEach(function(r){var dl=daysLeft(r),m=statusMeta(dl);rows.push([r.name,r.email||'',r.cert,r.issue||'',r.expiry||'',dl===null?'':dl,m.label]);});
   var csv=rows.map(function(r){return r.map(function(c){c=String(c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(',')}).join('\n');
-  dl2(csv,'certtrack-export-'+new Date().toISOString().slice(0,10)+'.csv');
+  var b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='certtrack-'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(function(){URL.revokeObjectURL(u)},500);toast('Exported');
 }
-
-/* ---------- check now ---------- */
-function runCheck(){
-  switchTab('notifications');
-  var n=dueAlerts().length;
-  toast(n? n+' alert'+(n>1?'s':'')+' due today':'No alerts due today');
-}
-
-/* ---------- utils ---------- */
-function val(id){return (document.getElementById(id).value||'').trim()}
-function setVal(id,v){document.getElementById(id).value=v||''}
+function val(id){var el=document.getElementById(id);return el?(el.value||'').trim():''}
+function setVal(id,v){var el=document.getElementById(id);if(el)el.value=v||''}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function dl(c,n){dl2(c,n)}
-function dl2(content,name){
-  var b=new Blob([content],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
-  a.href=u;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(u)},500);toast('Downloaded '+name);
-}
-var toastT;
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2200)}
-function showModal(title,html){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=html;document.getElementById('modalBg').classList.add('show')}
-function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},2000)}
 function refreshAll(){document.getElementById('ctRecords').textContent=records.length;renderDash();renderRecords();renderNotif();}
-
-/* ---------- init ---------- */
-load();loadSettings();refreshAll();
+loadPrefs();loadData();
 </script>
 </body>
 </html>
