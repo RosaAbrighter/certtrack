@@ -192,37 +192,48 @@ function saveSettings(){
   var u=val('sUrl'); if(u){apiUrl=u;try{localStorage.setItem(URL_KEY,u)}catch(e){}}
   if(records.length) refreshAll();
 }
+var jsonpCount=0;
 function loadData(){
   document.getElementById('refIcon').className='spin';
   document.getElementById('dashSub').textContent='Loading from your Sheet\u2026';
   document.getElementById('dashMain').style.display='none';
   document.getElementById('synced').style.display='none';
   document.getElementById('dashState').innerHTML='<div class="state"><div class="ico spin">\u27f3</div>Reading the Sheet\u2026</div>';
-  fetch(apiUrl,{method:'GET',redirect:'follow'})
-    .then(function(r){return r.json()})
-    .then(function(d){
-      document.getElementById('refIcon').className='';
-      if(!d||!d.ok){throw new Error(d&&d.error?d.error:'Unexpected response');}
-      records=(d.rows||[]).map(function(x){return {name:x.name||'',email:x.email||'',cert:x.cert||'',issue:x.issue||'',expiry:x.expiry||''}});
-      document.getElementById('dashState').innerHTML='';
-      document.getElementById('dashMain').style.display='block';
-      var t=new Date();
-      document.getElementById('synced').style.display='flex';
-      document.getElementById('syncedText').textContent='Live \u00b7 synced '+t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' \u00b7 '+records.length+' record'+(records.length!==1?'s':'');
-      refreshAll();
-      toast('Synced '+records.length+' record'+(records.length!==1?'s':''));
-    })
-    .catch(function(err){
-      document.getElementById('refIcon').className='';
-      document.getElementById('dashSub').textContent='Could not reach the Sheet.';
-      document.getElementById('dashMain').style.display='none';
-      document.getElementById('dashState').innerHTML=
-        '<div class="err"><b>Couldn\u2019t load data.</b><br>'+
-        'The dashboard couldn\u2019t read the Sheet. Common causes:<br>'+
-        '\u2022 The web app wasn\u2019t deployed with access set to <b>Anyone</b>.<br>'+
-        '\u2022 The connection URL in Settings is wrong, or the script was redeployed (new URL).<br><br>'+
-        'Tap <b>Refresh</b> to retry.<br>Error: '+esc(String(err.message||err))+'</div>';
-    });
+
+  var cb='certcb_'+(++jsonpCount)+'_'+Date.now();
+  var script=document.createElement('script');
+  var done=false;
+  function cleanup(){try{delete window[cb]}catch(e){window[cb]=undefined}if(script&&script.parentNode)script.parentNode.removeChild(script);clearTimeout(timer);}
+  function fail(msg){
+    if(done)return; done=true; cleanup();
+    document.getElementById('refIcon').className='';
+    document.getElementById('dashSub').textContent='Could not reach the Sheet.';
+    document.getElementById('dashMain').style.display='none';
+    document.getElementById('dashState').innerHTML=
+      '<div class="err"><b>Couldn\u2019t load data.</b><br>'+
+      'The dashboard couldn\u2019t read the Sheet. Common causes:<br>'+
+      '\u2022 The web app wasn\u2019t deployed with access set to <b>Anyone</b>.<br>'+
+      '\u2022 The connection key doesn\u2019t match, or the script needs redeploying (new version).<br><br>'+
+      'Tap <b>Refresh</b> to retry.<br>'+esc(msg)+'</div>';
+  }
+  window[cb]=function(d){
+    if(done)return; done=true; cleanup();
+    document.getElementById('refIcon').className='';
+    if(!d||!d.ok){fail('Error: '+((d&&d.error)||'unexpected response'));return;}
+    records=(d.rows||[]).map(function(x){return {name:x.name||'',email:x.email||'',cert:x.cert||'',issue:x.issue||'',expiry:x.expiry||''}});
+    document.getElementById('dashState').innerHTML='';
+    document.getElementById('dashMain').style.display='block';
+    var t=new Date();
+    document.getElementById('synced').style.display='flex';
+    document.getElementById('syncedText').textContent='Live \u00b7 synced '+t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' \u00b7 '+records.length+' record'+(records.length!==1?'s':'');
+    refreshAll();
+    toast('Synced '+records.length+' record'+(records.length!==1?'s':''));
+  };
+  var sep=apiUrl.indexOf('?')>-1?'&':'?';
+  script.src=apiUrl+sep+'callback='+cb;
+  script.onerror=function(){fail('Error: connection failed');};
+  var timer=setTimeout(function(){fail('Error: timed out');},15000);
+  document.body.appendChild(script);
 }
 document.getElementById('tabsInner').addEventListener('click',function(e){
   var b=e.target.closest('.tab'); if(!b)return; switchTab(b.dataset.tab);
